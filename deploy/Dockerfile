@@ -17,18 +17,33 @@
 FROM golang:1.14
 ARG GOARCH=amd64
 WORKDIR /go/src/github.com/GoogleContainerTools/kaniko
+
 # Get GCR credential helper
-ADD https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases/download/v2.0.2/docker-credential-gcr_linux_amd64-2.0.2.tar.gz /usr/local/bin/
-RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-gcr_linux_amd64-2.0.2.tar.gz
+RUN (mkdir -p /go/src/github.com/GoogleCloudPlatform || true)                && \
+  cd /go/src/github.com/GoogleCloudPlatform                                  && \
+  git clone https://github.com/GoogleCloudPlatform/docker-credential-gcr.git && \
+  cd /go/src/github.com/GoogleCloudPlatform/docker-credential-gcr            && \
+  make deps OUT_DIR=/usr/local/bin                                           && \
+  go build -ldflags "-linkmode external -extldflags -static" -i -o /usr/local/bin/docker-credential-gcr main.go 
+#ADD https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases/download/v2.0.1/docker-credential-gcr_linux_amd64-2.0.1.tar.gz /usr/local/bin/
+#RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-gcr_linux_amd64-2.0.1.tar.gz
+
 # Get Amazon ECR credential helper
 RUN go get -u github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
-RUN make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper linux-amd64
+RUN make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper
+#RUN go get -u github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
+#RUN make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper linux-amd64
+
 # ACR docker credential helper
-ADD https://aadacr.blob.core.windows.net/acr-docker-credential-helper/docker-credential-acr-linux-amd64.tar.gz /usr/local/bin
-RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-acr-linux-amd64.tar.gz
-# ACR docker env credential helper
-ADD https://github.com/chrismellard/docker-credential-acr-env/releases/download/0.6.0/docker-credential-acr-env_0.6.0_Linux_x86_64.tar.gz /usr/local/bin/
-RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-acr-env_0.6.0_Linux_x86_64.tar.gz
+#ADD https://aadacr.blob.core.windows.net/acr-docker-credential-helper/docker-credential-acr-linux-amd64.tar.gz /usr/local/bin
+#RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-acr-linux-amd64.tar.gz
+COPY ./acr.patch /
+RUN (mkdir -p /go/src/github.com/Azure || true)                && \
+  cd /go/src/github.com/Azure                                  && \
+  git clone https://github.com/Azure/acr-docker-credential-helper && \
+  cd /go/src/github.com/Azure/acr-docker-credential-helper            && \
+  git apply < /acr.patch && \
+  make && cp -f bin/linux/${GOARCH}/docker-credential-acr-linux /usr/local/bin/docker-credential-acr-linux
 
 # Add .docker config dir
 RUN mkdir -p /kaniko/.docker
@@ -39,14 +54,13 @@ RUN make GOARCH=${GOARCH}
 FROM scratch
 COPY --from=0 /go/src/github.com/GoogleContainerTools/kaniko/out/executor /kaniko/executor
 COPY --from=0 /usr/local/bin/docker-credential-gcr /kaniko/docker-credential-gcr
-COPY --from=0 /go/src/github.com/awslabs/amazon-ecr-credential-helper/bin/linux-amd64/docker-credential-ecr-login /kaniko/docker-credential-ecr-login
+COPY --from=0 /go/src/github.com/awslabs/amazon-ecr-credential-helper/bin/local/docker-credential-ecr-login /kaniko/docker-credential-ecr-login
 COPY --from=0 /usr/local/bin/docker-credential-acr-linux /kaniko/docker-credential-acr
-COPY --from=0 /usr/local/bin/docker-credential-acr-env /kaniko/docker-credential-acr-env
 COPY files/ca-certificates.crt /kaniko/ssl/certs/
 COPY --from=0 /kaniko/.docker /kaniko/.docker
 COPY files/nsswitch.conf /etc/nsswitch.conf
 ENV HOME /root
-ENV USER root
+ENV USER /root
 ENV PATH /usr/local/bin:/kaniko
 ENV SSL_CERT_DIR=/kaniko/ssl/certs
 ENV DOCKER_CONFIG /kaniko/.docker/

@@ -89,11 +89,11 @@ integration-test-misc:
 .PHONY: images
 images:
 	docker build ${BUILD_ARG} --build-arg=GOARCH=$(GOARCH) -t $(REGISTRY)/executor:latest -f deploy/Dockerfile .
-	docker build ${BUILD_ARG} --build-arg=GOARCH=$(GOARCH) -t $(REGISTRY)/executor:debug -f deploy/Dockerfile_debug .
-	docker build ${BUILD_ARG} --build-arg=GOARCH=$(GOARCH) -t $(REGISTRY)/warmer:latest -f deploy/Dockerfile_warmer .
+# docker build ${BUILD_ARG} --build-arg=GOARCH=$(GOARCH) -t $(REGISTRY)/executor:debug -f deploy/Dockerfile_debug .
+# docker build ${BUILD_ARG} --build-arg=GOARCH=$(GOARCH) -t $(REGISTRY)/warmer:latest -f deploy/Dockerfile_warmer .
 
 .PHONY: push
 push:
 	docker push $(REGISTRY)/executor:latest
-	docker push $(REGISTRY)/executor:debug
-	docker push $(REGISTRY)/warmer:latest
+# docker push $(REGISTRY)/executor:debug
+# docker push $(REGISTRY)/warmer:latest
