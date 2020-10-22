@@ -18,7 +18,7 @@ FROM golang:1.14
 WORKDIR /go/src/github.com/GoogleContainerTools/kaniko
 ARG GOARCH=amd64
 ARG TARGETPLATFORM
-RUN [[ ! -z "$TARGETPLATFORM" ]] && export GOARCH=`echo $TARGETPLATFORM |  awk '{split($0,a,"/"); print a[2]}'`        
+RUN if [ ! -z "$TARGETPLATFORM" ]; then export GOARCH=`echo $TARGETPLATFORM |  awk '{split($0,a,"/"); print a[2]}'`; fi       
 # Get GCR credential helper
 RUN (mkdir -p /go/src/github.com/GoogleCloudPlatform || true)                && \
   cd /go/src/github.com/GoogleCloudPlatform                                  && \
