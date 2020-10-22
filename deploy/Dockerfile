@@ -25,7 +25,7 @@ RUN (mkdir -p /go/src/github.com/GoogleCloudPlatform || true)                && 
   cd /go/src/github.com/GoogleCloudPlatform/docker-credential-gcr            && \
   make deps OUT_DIR=/usr/local/bin                                           && \
   make                                                                       && \ 
-  mv ./bin/docker-credential-gcr /usr/bin/docker-credential-gcr
+  mv ./bin/docker-credential-gcr /usr/local/bin/docker-credential-gcr
 #ADD https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases/download/v2.0.1/docker-credential-gcr_linux_amd64-2.0.1.tar.gz /usr/local/bin/
 #RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-gcr_linux_amd64-2.0.1.tar.gz
 
