@@ -24,7 +24,8 @@ RUN (mkdir -p /go/src/github.com/GoogleCloudPlatform || true)                && 
   git clone https://github.com/GoogleCloudPlatform/docker-credential-gcr.git && \
   cd /go/src/github.com/GoogleCloudPlatform/docker-credential-gcr            && \
   make deps OUT_DIR=/usr/local/bin                                           && \
-  CGO_ENABLED=1 go build -ldflags "-linkmode external -extldflags -static" -i -o /usr/local/bin/docker-credential-gcr main.go 
+  make                                                                       && \ 
+  mv ./bin/docker-credential-gcr /usr/bin/docker-credential-gcr
 #ADD https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases/download/v2.0.1/docker-credential-gcr_linux_amd64-2.0.1.tar.gz /usr/local/bin/
 #RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-gcr_linux_amd64-2.0.1.tar.gz
 
