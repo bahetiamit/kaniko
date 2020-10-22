@@ -21,7 +21,7 @@ WORKDIR /go/src/github.com/GoogleContainerTools/kaniko
 
 # Get GCR credential helper
 RUN (mkdir -p /go/src/github.com/GoogleCloudPlatform || true)                && \
-  export GOARCH=$TARGETPLATFORM && \
+  echo "-------- GOARCH is ${GOARCH}" && \
   cd /go/src/github.com/GoogleCloudPlatform                                  && \
   git clone https://github.com/GoogleCloudPlatform/docker-credential-gcr.git && \
   cd /go/src/github.com/GoogleCloudPlatform/docker-credential-gcr            && \
