@@ -18,15 +18,14 @@ FROM golang:1.14
 WORKDIR /go/src/github.com/GoogleContainerTools/kaniko
 ARG GOARCH=amd64
 ARG TARGETPLATFORM
-RUN if [ ! -z "$TARGETPLATFORM" ]; then export GOARCH=`echo $TARGETPLATFORM |  awk '{split($0,a,"/"); print a[2]}'`; fi       
+RUN if [ ! -z "$TARGETPLATFORM" ]; then export GOARCH=`echo $TARGETPLATFORM |  awk '{split($0,a,"/"); print a[2]}'`; else GOARCH=$(uname -m); fi       
 # Get GCR credential helper
 RUN (mkdir -p /go/src/github.com/GoogleCloudPlatform || true)                && \
   cd /go/src/github.com/GoogleCloudPlatform                                  && \
   git clone https://github.com/GoogleCloudPlatform/docker-credential-gcr.git && \
   cd /go/src/github.com/GoogleCloudPlatform/docker-credential-gcr            && \
   make deps OUT_DIR=/usr/local/bin                                           && \
-  make                                                                       && \ 
-  mv ./bin/docker-credential-gcr /usr/local/bin/docker-credential-gcr
+  go build  -ldflags "-linkmode external -extldflags -static" -i -o /usr/local/bin/docker-credential-gcr main.go 
 #ADD https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases/download/v2.0.1/docker-credential-gcr_linux_amd64-2.0.1.tar.gz /usr/local/bin/
 #RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-gcr_linux_amd64-2.0.1.tar.gz
 
