@@ -16,10 +16,11 @@
 
 FROM golang:1.14
 WORKDIR /go/src/github.com/GoogleContainerTools/kaniko
-
+ARG GOARCH=amd64
+ARG TARGETPLATFORM
+RUN [[ ! -z "$TARGETPLATFORM" ]] && export GOARCH=`echo $TARGETPLATFORM |  awk '{split($0,a,"/"); print a[2]}'`        
 # Get GCR credential helper
 RUN (mkdir -p /go/src/github.com/GoogleCloudPlatform || true)                && \
-  echo "-------- GOARCH is ${GOARCH}, build platform is ${BUILDPLATFORM} & target is ${TARGETPLATFORM}" && \
   cd /go/src/github.com/GoogleCloudPlatform                                  && \
   git clone https://github.com/GoogleCloudPlatform/docker-credential-gcr.git && \
   cd /go/src/github.com/GoogleCloudPlatform/docker-credential-gcr            && \
@@ -43,14 +44,14 @@ RUN (mkdir -p /go/src/github.com/Azure || true)                && \
   cd /go/src/github.com/Azure                                  && \
   git clone https://github.com/Azure/acr-docker-credential-helper && \
   cd /go/src/github.com/Azure/acr-docker-credential-helper            && \
-  git apply < /acr.patch && \
+  git apply < ./acr.patch && \
   make && cp -f bin/linux/${GOARCH}/docker-credential-acr-linux /usr/local/bin/docker-credential-acr-linux
 
 # Add .docker config dir
 RUN mkdir -p /kaniko/.docker
 
 COPY . .
-RUN make GOARCH=${GOARCH}
+RUN make 
 
 FROM scratch
 COPY --from=0 /go/src/github.com/GoogleContainerTools/kaniko/out/executor /kaniko/executor
