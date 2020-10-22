@@ -13,14 +13,14 @@ jobs:
       - name: Get latest release tag      
         uses: oprypin/find-latest-tag@v1
         with:
-          repository: bahetiamit/yq  # The repository to scan.
+          repository: bahetiamit/kaniko  # The repository to scan.
           releases-only: true  # We know that all relevant tags have a GitHub release for them.
-        id: yq  
+        id: kaniko  
 
       - name: Clone source code
         uses: actions/checkout@v2
         with:
-          ref: ${{ steps.yq.outputs.tag }}
+          ref: ${{ steps.kaniko.outputs.tag }}
       
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
