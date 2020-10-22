@@ -39,12 +39,12 @@ RUN make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper
 # ACR docker credential helper
 #ADD https://aadacr.blob.core.windows.net/acr-docker-credential-helper/docker-credential-acr-linux-amd64.tar.gz /usr/local/bin
 #RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-acr-linux-amd64.tar.gz
-COPY ./acr.patch /
+#COPY ./acr.patch /
 RUN (mkdir -p /go/src/github.com/Azure || true)                && \
   cd /go/src/github.com/Azure                                  && \
   git clone https://github.com/Azure/acr-docker-credential-helper && \
   cd /go/src/github.com/Azure/acr-docker-credential-helper            && \
-  git apply < ./acr.patch && \
+  git apply < /acr.patch && \
   make && cp -f bin/linux/${GOARCH}/docker-credential-acr-linux /usr/local/bin/docker-credential-acr-linux
 
 # Add .docker config dir
