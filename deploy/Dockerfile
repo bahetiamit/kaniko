@@ -18,6 +18,8 @@ FROM golang:1.14
 WORKDIR /go/src/github.com/GoogleContainerTools/kaniko
 ARG GOARCH=amd64
 ARG TARGETPLATFORM
+ENV GOARCH $(echo $TARGETPLATFORM |  awk '{split($0,a,"/"); print a[2]}')
+RUN echo "Env goarch is $GOARCH"
 RUN if [ ! -z "$TARGETPLATFORM" ]; then `echo $TARGETPLATFORM |  awk '{split($0,a,"/"); print a[2]}' > /goarch.txt`; else uname -m > /goarch.txt; fi       
 # Get GCR credential helper
 RUN GOARCH=$(cat /goarch.txt) && CGO_ENABLED=0 && \
@@ -29,8 +31,8 @@ RUN GOARCH=$(cat /goarch.txt) && CGO_ENABLED=0 && \
   go build -ldflags "-linkmode external -extldflags -static" -i -o /usr/local/bin/docker-credential-gcr main.go  
 
 # Get Amazon ECR credential helper
-RUN go get -u github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
-RUN make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper
+RUN GOARCH=$(cat /goarch.txt) && go get -u github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
+RUN GOARCH=$(cat /goarch.txt) && make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper
 #RUN go get -u github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
 #RUN make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper linux-amd64
 
@@ -38,7 +40,7 @@ RUN make -C /go/src/github.com/awslabs/amazon-ecr-credential-helper
 #ADD https://aadacr.blob.core.windows.net/acr-docker-credential-helper/docker-credential-acr-linux-amd64.tar.gz /usr/local/bin
 #RUN tar --no-same-owner -C /usr/local/bin/ -xvzf /usr/local/bin/docker-credential-acr-linux-amd64.tar.gz
 COPY ./acr.patch /
-RUN (mkdir -p /go/src/github.com/Azure || true)                && \
+RUN GOARCH=$(cat /goarch.txt) && (mkdir -p /go/src/github.com/Azure || true)                && \
   cd /go/src/github.com/Azure                                  && \
   git clone https://github.com/Azure/acr-docker-credential-helper && \
   cd /go/src/github.com/Azure/acr-docker-credential-helper            && \
