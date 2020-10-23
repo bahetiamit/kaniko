@@ -49,7 +49,7 @@ RUN (mkdir -p /go/src/github.com/Azure || true)                && \
 RUN mkdir -p /kaniko/.docker
 
 COPY . .
-RUN make 
+RUN make GOARCH=$(cat /goarch.txt) 
 
 FROM scratch
 COPY --from=0 /go/src/github.com/GoogleContainerTools/kaniko/out/executor /kaniko/executor
