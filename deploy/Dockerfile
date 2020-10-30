@@ -45,6 +45,7 @@ RUN GOARCH=$(cat /goarch) && (mkdir -p /go/src/github.com/Azure || true)  && \
   cd /go/src/github.com/Azure                                             && \
   git clone https://github.com/Azure/acr-docker-credential-helper         && \
   cd /go/src/github.com/Azure/acr-docker-credential-helper                && \
+  git checkout a79b541f3ee761f6cc4511863ed41fb038c19464                   && \
   git apply < /acr.patch                                                  && \
   make && cp -f bin/linux/${GOARCH}/docker-credential-acr-linux /usr/local/bin/docker-credential-acr-linux
   
