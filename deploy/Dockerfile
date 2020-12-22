@@ -60,7 +60,7 @@ RUN GOARCH=$(cat /goarch) && (mkdir -p /go/src/github.com/chrismellard || true) 
 RUN mkdir -p /kaniko/.docker
 
 COPY . .
-RUN make GOARCH=$(cat /goarch.txt) 
+RUN make GOARCH=$(cat /goarch) 
 
 FROM scratch
 COPY --from=0 /go/src/github.com/GoogleContainerTools/kaniko/out/executor /kaniko/executor
@@ -80,4 +80,3 @@ WORKDIR /workspace
 RUN ["docker-credential-gcr", "config", "--token-source=env"]
 
 ENTRYPOINT ["/kaniko/executor"]
-

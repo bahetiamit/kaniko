@@ -47,6 +47,7 @@ const (
 	daemonPrefix       = "daemon://"
 	integrationPath    = "integration"
 	dockerfilesPath    = "dockerfiles"
+	arch               = "amd64"
 	emptyContainerDiff = `[
      {
        "Image1": "%s",
@@ -134,21 +135,24 @@ func TestMain(m *testing.M) {
 }
 
 func buildRequiredImages() error {
+	dockerBuildArgs := []string{
+		"--build-arg", fmt.Sprintf("GOARCH=%s", arch)}
+
 	setupCommands := []struct {
 		name    string
 		command []string
 	}{
 		{
 			name:    "Building kaniko image",
-			command: []string{"docker", "build", "-t", ExecutorImage, "-f", "../deploy/Dockerfile", ".."},
+			command: append([]string{"docker", "build", "-t", ExecutorImage, "-f", "../deploy/Dockerfile", ".."}, dockerBuildArgs...),
 		},
 		{
 			name:    "Building cache warmer image",
-			command: []string{"docker", "build", "-t", WarmerImage, "-f", "../deploy/Dockerfile_warmer", ".."},
+			command: append([]string{"docker", "build", "-t", WarmerImage, "-f", "../deploy/Dockerfile_warmer", ".."}, dockerBuildArgs...),
 		},
 		{
 			name:    "Building onbuild base image",
-			command: []string{"docker", "build", "-t", config.onbuildBaseImage, "-f", fmt.Sprintf("%s/Dockerfile_onbuild_base", dockerfilesPath), "."},
+			command: append([]string{"docker", "build", "-t", config.onbuildBaseImage, "-f", fmt.Sprintf("%s/Dockerfile_onbuild_base", dockerfilesPath), "."}, dockerBuildArgs...),
 		},
 		{
 			name:    "Pushing onbuild base image",
@@ -463,22 +467,20 @@ func buildImage(t *testing.T, dockerfile string, imageBuilder *DockerFileBuilder
 // Build each image with kaniko twice, and then make sure they're exactly the same
 func TestCache(t *testing.T) {
 	populateVolumeCache()
+	dockerBuildArgs := []string{
+		"--build-arg", fmt.Sprintf("GOARCH=%s", arch)}
 	for dockerfile := range imageBuilder.TestCacheDockerfiles {
-		args := []string{}
-		if dockerfile == "Dockerfile_test_cache_copy" {
-			args = append(args, "--cache-copy-layers=true")
-		}
 		t.Run("test_cache_"+dockerfile, func(t *testing.T) {
 			dockerfile := dockerfile
 			t.Parallel()
 
 			cache := filepath.Join(config.imageRepo, "cache", fmt.Sprintf("%v", time.Now().UnixNano()))
 			// Build the initial image which will cache layers
-			if err := imageBuilder.buildCachedImages(config, cache, dockerfilesPath, 0, args); err != nil {
+			if err := imageBuilder.buildCachedImages(config, cache, dockerfilesPath, 0, dockerBuildArgs); err != nil {
 				t.Fatalf("error building cached image for the first time: %v", err)
 			}
 			// Build the second image which should pull from the cache
-			if err := imageBuilder.buildCachedImages(config, cache, dockerfilesPath, 1, args); err != nil {
+			if err := imageBuilder.buildCachedImages(config, cache, dockerfilesPath, 1, dockerBuildArgs); err != nil {
 				t.Fatalf("error building cached image for the first time: %v", err)
 			}
 			// Make sure both images are the same
